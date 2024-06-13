@@ -36,26 +36,33 @@ pipe_width = 80
 pipe_height = 600
 pipe_gap = 300
 pipe_velocity = -20
+score_points = True
+bird_velocity = 0
+pipes = []
+score = 0
+running = True
+game_over = False
+death_sound_played = False
+clock = pygame.time.Clock()
+font = pygame.font.SysFont(None, 36)
+font_end = pygame.font.Font(None, 72)
 
 def create_pipe():
     pipe_x = SCREEN_WIDTH
     pipe_y = random.randint(-300, 0)
     return pygame.Rect(pipe_x, pipe_y, pipe_width, pipe_height)
 
-bird_velocity = 0
-pipes = []
-score = 0
-running = True
-game_over = False
-clock = pygame.time.Clock()
-font = pygame.font.SysFont(None, 36)
+def display_score(score):
+    score_text = font.render(f'Score: {score}', True, WHITE)
+    screen.blit(score_text, (10, 10))
+    
+
 
 pygame.mixer.music.load('background_music.mp3')
 pygame.mixer.music.play(-1)
 
-def display_score(score):
-    score_text = font.render(f'Score: {score}', True, WHITE)
-    screen.blit(score_text, (10, 10))
+death_sound = pygame.mixer.Sound('death_sound.mp3')
+
 
 while running:
     screen.fill(BLACK)
@@ -83,7 +90,8 @@ while running:
             if pipe.x < -pipe_width:
                 pipes.remove(pipe)
             screen.blit(pipe_img, pipe)
-            bottom_pipe = pygame.Rect(pipe.x, pipe.y + pipe_height + pipe_gap, pipe_width, SCREEN_HEIGHT - pipe.y - pipe_height - pipe_gap)
+            bottom_pipe = pygame.Rect(pipe.x, pipe.y + pipe_height + pipe_gap, pipe_width, 
+            SCREEN_HEIGHT - pipe.y - pipe_height - pipe_gap)
             screen.blit(pygame.transform.flip(pipe_img, False, True), bottom_pipe)
 
         if pipes and pipes[0].x + pipe_width < bird_rect.centerx:
@@ -101,17 +109,21 @@ while running:
 
     else:
         screen.blit(death_img, (0, 0))
-        
-        final_score_text = font.render(f'Final Score: {score}', True, BLACK)
-        screen.blit(final_score_text, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 50))
+        pygame.mixer.music.stop()
+        final_score_text = font_end.render(f'Final Score: {score}', True, BLACK)
+        screen.blit(final_score_text, (SCREEN_WIDTH // 2 - 180, SCREEN_HEIGHT // 2 + 50))
 
-    display_score(score)
+        if not death_sound_played:
+            death_sound.play()
+            death_sound_played = True
+            score_points = False
 
-    # Atualizando a tela
+    if score_points:
+        display_score(score)
+
     pygame.display.flip()
 
-    # Controlando a taxa de atualização
     clock.tick(30)
 
-pygame.mixer.music.stop()  # Parar a música quando o jogo terminar
 pygame.quit()
+
